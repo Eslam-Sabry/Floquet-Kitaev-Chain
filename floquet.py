@@ -96,3 +96,5 @@ def plot_modes(evals,evecs, mode_energy,e_threshold=None):
             ax1.tick_params(axis='both', which='major', labelsize=16)
         #plt.savefig('Edge_modes_Kitaev.pdf')
         plt.show()
+
+

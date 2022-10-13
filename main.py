@@ -2,7 +2,7 @@ from functools import reduce
 import numpy as np
 from constants import *
 from green_function import *
-#import holoviews
+from tqdm import tqdm
 from scipy import linalg as sla
 import matplotlib as mp
 plt.style.use('seaborn')		# Setting the plotting style
@@ -63,13 +63,13 @@ def kitaev_kick_operator(time,period = T, h_1 = h_1, h_2 = h_2):
     
 #print(kitaev_propagator(T))
 
-h_f = floquet_hamiltonian([h_1.lattice_hamiltonian(),h_2.lattice_hamiltonian()],T=2*np.pi)
+#h_f = floquet_hamiltonian([h_1.lattice_hamiltonian(),h_2.lattice_hamiltonian()],T=2*np.pi)
 times = np.linspace(0,T, 100)
-eval, evec = la.eigh(h_f)
-#p = [kitaev_kick_operator(t) for t in times]
+#eval, evec = la.eigh(h_f)
+p = [kitaev_kick_operator(t) for t in tqdm(times)]
 #pi_majorana = [np.dot(pp,eval[0]) for pp in p]
-plot_spectrum(h_f)
+"""plot_spectrum(h_f)
 print(evec[:,0].size)
 plt.plot(np.arange(evec[:,0].size),np.abs(evec[:,0])**2)
-plt.show()
+plt.show()"""
 print("finish")
