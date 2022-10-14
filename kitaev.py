@@ -10,6 +10,7 @@ mp.rcParams['figure.figsize'] = (15, 10)  # Setting the size of the plots
 import numpy.linalg as la 
 from floquet import *
 from scipy.integrate import quad
+from scipy import fft
 
 
 def onsite(mu=mu, **kwargs):
@@ -20,7 +21,7 @@ def offsite(t=t, delta=delta,**kwargs):
     return -t * s_z +  1j * delta * s_y
 
 
-N = 100
+N = 2
 
 periods = np.linspace(0.2 / t, 5 / t, 100)
 momenta = np.linspace(-2*np.pi, 2*np.pi,100)
@@ -48,9 +49,9 @@ def kitaev_hamiltonian(time,period = T,h_1=h_1,h_2=h_2,**kwargs):
 #u = propagator(hamiltonian, T,N,d)
 
 def kitaev_propagator(time,period = T, h_1=h_1,h_2=h_2):
-    if time <= period/2:
+    if time%period <= period/2:
         return sla.expm(-1j*h_1.lattice_hamiltonian()*time)
-    elif period >= time > period/2:
+    else:
         exps = [sla.expm(-1j * h_1.lattice_hamiltonian() * (time - period / 2)) ,sla.expm(-1j * h_2.lattice_hamiltonian() * period / 2)]
         #return reduce(np.matmul, exps)
         return np.matmul(sla.expm(-1j * h_1.lattice_hamiltonian() * (time - period / 2)) ,sla.expm(-1j * h_2.lattice_hamiltonian() * period / 2))
@@ -61,15 +62,3 @@ def kitaev_kick_operator(time,period = T, h_1 = h_1, h_2 = h_2):
     p = np.matmul(U,sla.expm(1j*np.pi*h_f*(time/period)))
     return p
     
-#print(kitaev_propagator(T))
-
-#h_f = floquet_hamiltonian([h_1.lattice_hamiltonian(),h_2.lattice_hamiltonian()],T=2*np.pi)
-times = np.linspace(0,T, 100)
-#eval, evec = la.eigh(h_f)
-p = [kitaev_kick_operator(t) for t in tqdm(times)]
-#pi_majorana = [np.dot(pp,eval[0]) for pp in p]
-"""plot_spectrum(h_f)
-print(evec[:,0].size)
-plt.plot(np.arange(evec[:,0].size),np.abs(evec[:,0])**2)
-plt.show()"""
-print("finish")
