@@ -62,3 +62,4 @@ def kitaev_kick_operator(time,period = T, h_1 = h_1, h_2 = h_2):
     p = np.matmul(U,sla.expm(1j*np.pi*h_f*(time/period)))
     return p
     
+print("hi")
