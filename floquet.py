@@ -25,7 +25,10 @@ def one_period_propagator(hamiltonians, T, n=None):
 
 def floquet_hamiltonian(hamiltonians,T,n=None):
     u_T = one_period_propagator(hamiltonians,T,n)
-    return 1j * sla.logm(u_T)/np.pi
+    eval, evec= la.eig(u_T)
+    h_f1 =evec @ np.diag(np.log(eval)*1j/np.pi) @ la.inv(evec)
+    return h_f1
+    #return 1j * sla.logm(u_T)/np.pi    #this is slow. better diagonalize then take the logarithm 
 
 
 #فكرة فاشلة
