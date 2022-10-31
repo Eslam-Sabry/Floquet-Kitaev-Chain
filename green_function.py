@@ -4,6 +4,7 @@ from hamiltonian import *
 from constants import *
 
 
+# TODO: Used in left_green_function, which is not used.
 def mobius_transformation_matrix(z, h: Hamiltonian):
     # TODO: Name shadowing may cause issues.
     d, N, u, v = h.d, h.N, h.u, h.v
@@ -18,6 +19,7 @@ def mobius_transformation_matrix(z, h: Hamiltonian):
     return x
 
 
+# TODO: Used in left_green_function, which is not used.
 def sort_matrix(x, sort_by_func=np.absolute):
     # TODO: Name shadowing may cause issues.
     A, Q = la.eig(x)
@@ -28,6 +30,7 @@ def sort_matrix(x, sort_by_func=np.absolute):
     return Q
 
 
+# TODO: Not used
 def left_green_function(z, h: Hamiltonian):
     # TODO: Name shadowing may cause issues.
     d = h.d

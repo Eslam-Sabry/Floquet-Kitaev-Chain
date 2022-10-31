@@ -13,6 +13,8 @@ mp.rcParams['figure.figsize'] = (20, 10)  # Setting the size of the plots
 
 
 def one_period_propagator(hamiltonians, T, n=None):
+    # TODO: Hamiltonians here are always ndarrays, they're never lists or callables per-se.
+    #  We should aim to have better checking here, and preferably, use a unified type instead of even check for it.
     if isinstance(hamiltonians, list):
         n = len(hamiltonians)
     elif callable(hamiltonians):
@@ -22,6 +24,8 @@ def one_period_propagator(hamiltonians, T, n=None):
     return reduce(np.matmul, exps)
 
 
+# TODO: Two ndarrays (Hamiltonian.lattice_hamiltonian outputs) are passed here.
+# TODO: This is used in the ipynb itself. Nothing else is.
 def floquet_hamiltonian(hamiltonians, T, n=None):
     u_T = one_period_propagator(hamiltonians, T, n)
     eigenval, eigenvec = la.eig(u_T)
@@ -30,6 +34,7 @@ def floquet_hamiltonian(hamiltonians, T, n=None):
     # return 1j * sla.logm(u_T)/np.pi    #this is slow. better diagonalize then take the logarithm
 
 
+# TODO: Wat?
 # فكرة فاشلة
 # def propagator(hamiltonian,time,N,d,order=10,**kwargs):
 #    u = lambda x: np.eye(d*N,dtype=complex)
@@ -38,6 +43,7 @@ def floquet_hamiltonian(hamiltonians, T, n=None):
 #    return u(time)
 
 
+# TODO: Not used.
 def calculate_finite_spectrum(periods, hamiltonians):
     energies = []
     # TODO: I need to understand what is going on here. This looks very strange.
@@ -50,6 +56,7 @@ def calculate_finite_spectrum(periods, hamiltonians):
     return np.array(energies).real
 
 
+# TODO: Not used.
 def calculate_bands(momenta, hamiltonians_k, T):
     energies = []
     # TODO: I need to understand what is going on here. This looks very strange.
@@ -78,6 +85,7 @@ e_threshold = 1E-6
 
 
 # TODO: Name shadowing may cause issues. Does not default to outer e_threshold.
+# TODO: Only used in plot_modes, which is not used.
 def check_modes(evals, mode_energy, e_threshold=None):
     # TODO: Unused variable
     nzmodes = 0
@@ -89,6 +97,7 @@ def check_modes(evals, mode_energy, e_threshold=None):
 
 
 # TODO: Name shadowing may cause issues. Does not default to outer e_threshold.
+# TODO: Not used.
 def plot_modes(evals, evecs, mode_energy, e_threshold=None):
     modes_ind, cnt_modes = check_modes(evals, mode_energy, e_threshold=e_threshold)
     if cnt_modes > 0:
