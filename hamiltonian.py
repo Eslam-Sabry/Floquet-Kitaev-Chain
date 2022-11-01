@@ -1,8 +1,5 @@
 import numpy as np
-from numpy import linalg as la
-from matplotlib import pyplot as plt
 import math
-# from constants import *
 
 
 class Hamiltonian:
@@ -16,12 +13,9 @@ class Hamiltonian:
         # nearest neighbors interaction
         self.v = v
 
-    def lattice_hamiltonian(self, *args, **kwargs):
-        # TODO: HIGH PRIORITY - This function was never called with any args, therefore it calls onsite and offsite with
-        #  default values from constants.py. We should probably define explicit parameters for this instead of use
-        #  *args and **kwargs
-        u = self.u(*args, **kwargs) if callable(self.u) else self.u
-        v = self.v(*args, **kwargs) if callable(self.v) else self.v
+    def lattice_hamiltonian(self):
+        u = self.u() if callable(self.u) else self.u
+        v = self.v() if callable(self.v) else self.v
         d, N = self.d, self.N
         H = np.zeros([d * N, d * N], complex)
         for i in range(N - 1):
@@ -31,24 +25,8 @@ class Hamiltonian:
         H[(N - 1) * d:N * d, (N - 1) * d:N * d] = u
         return H
 
-    def k_space_hamiltonian(self, k, *args, **kwargs):
-        u = self.u(*args, **kwargs) if callable(self.u) else self.u
-        v = self.v(*args, **kwargs) if callable(self.v) else self.v
-        # TODO: Unused variables
-        d, N = self.d, self.N
+    def k_space_hamiltonian(self, k):
+        u = self.u() if callable(self.u) else self.u
+        v = self.v() if callable(self.v) else self.v
         H_k = u + math.cos(k) * v.real + math.sin(k) * v.imag
         return H_k
-
-    def plot_spectrum(self, *args, **kwargs):
-        var_k = np.linspace(-np.pi, np.pi, 50)
-        spectrum = []
-        for i in range(len(var_k)):
-            eigenval, eigenvec = la.eigh([self.k_space_hamiltonian(k=var_k[i], *args, **kwargs)])
-            spectrum.append(eigenval[0])
-        plt.title("Energy spectrum")
-        plt.plot(var_k, spectrum, label='spectrum')
-        # plt.plot(var_mu/t,G_img-F_img,label = 'G_img-F_img')
-        plt.ylabel('E')
-        plt.xlabel('$k$')
-        plt.legend()
-        plt.show()

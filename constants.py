@@ -1,14 +1,11 @@
 import numpy as np
 
-t = np.pi
-delta = 0.50 * t
+t = np.pi  # seconds
 mu = 0.0 * t
 B = 0.50 * t
 a = 1.0 * t
 omega = 1.0 * t
 A = 0.01 * t
-d = 2
-N = 25
 
 s_x = np.array([[0, 1], [1, 0]])
 s_y = np.array([[0, -1j], [1j, 0]])

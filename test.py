@@ -1,7 +1,7 @@
 from functools import reduce
 import numpy as np
 from matplotlib import pyplot as plt
-from kitaev import kitaev_kick_operator
+from kitaev import kitaev_kick_operator, T
 from scipy import fft
 from tqdm import tqdm
 
