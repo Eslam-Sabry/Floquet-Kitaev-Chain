@@ -75,12 +75,12 @@ e_threshold = 1E-6
 
 
 def check_modes(evals, mode_energy,e_threshold=None):
-    nzmodes = 0
+    nmodes = 0
     if e_threshold == None:
-        zmodes_ind = np.where(np.isclose(abs(evals), mode_energy * np.ones(len(evals))))[0]
+        modes_ind = np.where(np.isclose(abs(evals), mode_energy * np.ones(len(evals))))[0]
     else:
-        zmodes_ind = np.where(np.isclose(abs(evals), mode_energy * np.ones(len(evals)),atol=e_threshold))[0]
-    return zmodes_ind,len(zmodes_ind)
+        modes_ind = np.where(np.isclose(abs(evals), mode_energy * np.ones(len(evals)),atol=e_threshold))[0]
+    return modes_ind,len(modes_ind)
     
 
 def plot_modes(evals,evecs, mode_energy,e_threshold=None):
