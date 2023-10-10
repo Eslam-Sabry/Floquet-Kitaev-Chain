@@ -1,0 +1,9 @@
+axes.labelweight : bold
+axes.titleweight: bold
+figure.labelweight: bold
+figure.titleweight: bold
+font.weight: bold
+xtick.labelsize: 30.0
+ytick.labelsize: 30.0
+axes.labelsize: 30.0
+axes.titlesize: 30.0
