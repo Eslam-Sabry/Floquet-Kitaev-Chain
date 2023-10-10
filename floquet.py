@@ -1,103 +1,98 @@
 from functools import reduce
-import imp
+import torch
+import torch.linalg as la
 import numpy as np
+import matplotlib.pyplot as plt
 from constants import *
-from green_function import *
-#import holoviews
-from scipy import linalg as sla
-import matplotlib as mp
-#plt.style.use('seaborn')		# Setting the plotting style
-mp.rcParams['figure.figsize'] = (20, 10)  # Setting the size of the plots
-import numpy.linalg as la 
-from scipy.integrate import quad
-
 
 def one_period_propagator(hamiltonians, T, n=None):
     if isinstance(hamiltonians, list):
-        num = len(hamiltonians)
-        exps = [sla.expm(-1j * h * T / num) for h in hamiltonians]
-        return reduce(np.matmul, exps)
-
+        n = len(hamiltonians)
     elif callable(hamiltonians):
-        hamiltonian = [hamiltonians(i*(T/n)) for i in range(n)]
-        exps = [sla.expm(-1j * h * T / n) for h in hamiltonian]
-        return reduce(np.matmul, exps)
+        hamiltonians = [hamiltonians(i * (T / n)) for i in range(n)]
+    exps = []
+    for h in hamiltonians:
+        eval, evec = la.eigh(h)
+        exps.append(torch.matmul(evec, torch.matmul(torch.diag_embed(torch.exp(eval * (-1j * T / n))), torch.conj(evec).transpose(-2,-1))))
+    return reduce(torch.matmul, exps)
 
-def floquet_hamiltonian(hamiltonians,T,n=None):
-    u_T = one_period_propagator(hamiltonians,T,n)
-    eval, evec= la.eig(u_T)
-    h_f1 =evec @ np.diag(np.log(eval)*1j/np.pi) @ la.inv(evec)
+
+
+def floquet_hamiltonian(hamiltonians, T, n=None):
+    u_T = one_period_propagator(hamiltonians, T, n)
+    eigenval, eigenvec = la.eig(u_T)
+    return (torch.log(eigenval) * 1j / np.pi) , eigenvec
+
+
+def floquet_hamiltonian2(hamiltonians, T, n=None):
+    u_T = one_period_propagator(hamiltonians, T, n)
+    eigenval, eigenvec = la.eig(u_T)
+    h_f1 = torch.matmul(eigenvec, torch.matmul(torch.diag_embed(torch.log(eigenval) * 1j / np.pi), la.inv(eigenvec)))
     return h_f1
-    #return 1j * sla.logm(u_T)/np.pi    #this is slow. better diagonalize then take the logarithm 
-
-
-#فكرة فاشلة
-#def propagator(hamiltonian,time,N,d,order=10,**kwargs):
-#    u = lambda x: np.eye(d*N,dtype=complex)
-#    for i in range(order):
-#        u = lambda x: u(x) - i * np.vectorize(quad)(lambda t: hamiltonian(t,kwargs)@u(t), 0, x)
-#    return u(time)
-
 
 
 def calculate_finite_spectrum(periods, hamiltonians):
     energies = []
     for T in periods:
         U = one_period_propagator(hamiltonians, T)
-        phases = np.angle(la.eigvals(U))
-        phases = np.sort(np.abs(phases))
-        ev = np.sort([(-1) ** n * val for n, val in enumerate(phases)])
+        phases = torch.angle(la.eigvals(U))
+        phases = torch.sort(torch.abs(phases))
+        ev = torch.sort(torch.stack([(-1) ** n * val for n, val in enumerate(phases)]))
         energies.append(ev)
-    return np.array(energies).real
+    return torch.stack(energies).real
+
 
 
 def calculate_bands(momenta, hamiltonians_k, T):
     energies = []
-    for k in momenta:
-        hamiltonians = [h_k(k) for h_k in hamiltonians_k]
-        U = one_period_propagator(hamiltonians, T)
-        phases = np.angle(la.eigvals(U))
-        phases = np.sort(np.abs(phases))
-        ev = np.sort([(-1) ** n * val for n, val in enumerate(phases)])
-        energies.append(ev)
-    return np.array(energies).real
+    hamiltonians = [h_k(momenta) for h_k in hamiltonians_k]
+    U = one_period_propagator(hamiltonians, T)
+    phases = torch.angle(la.eigvals(U))
+    phases, indices = torch.sort(torch.abs(phases))
+    ev = np.sort([(-1) ** n * val for n, val in enumerate(np.sort(np.abs(phases.cpu())))])
+    #energies.append(ev)
+    #return torch.stack(energies).real
+    return ev.real
 
-def plot_spectrum(Hmat,N=N):
-    evals,evecs = la.eigh(Hmat)
+
+
+def plot_spectrum(Hmat, N=N):
+    evals, evecs = la.eigh(Hmat)
     evals = evals.real
-    plt.scatter(np.arange(len(evals)),evals)
+    plt.scatter(torch.arange(len(evals)).cpu(), evals.cpu())
     plt.title('Energy Spectrum of Chain with {} Sites'.format(N))
     plt.show()
-    #plt.savefig("spectrum")
 
 
 e_threshold = 1E-6
 
 
-def check_modes(evals, mode_energy,e_threshold=None):
+def check_modes(evals, mode_energy, _e_threshold=None):
     nmodes = 0
-    if e_threshold == None:
-        modes_ind = np.where(np.isclose(abs(evals), mode_energy * np.ones(len(evals))))[0]
+    energy_matrix = mode_energy * torch.ones(len(evals),device=device)
+    if _e_threshold is None:
+        modes_ind = torch.where(torch.isclose(torch.abs(evals), energy_matrix))[0]
     else:
-        modes_ind = np.where(np.isclose(abs(evals), mode_energy * np.ones(len(evals)),atol=e_threshold))[0]
-    return modes_ind,len(modes_ind)
+        modes_ind = torch.where(torch.isclose(torch.abs(evals), energy_matrix, atol=_e_threshold))[0]
+    return modes_ind, len(modes_ind)
     
 
-def plot_modes(evals,evecs, mode_energy,e_threshold=None):
-    modes_ind,cnt_modes = check_modes(evals, mode_energy,e_threshold=e_threshold)
+def plot_modes(evals, evecs, mode_energy, _e_threshold=None, save_figure=False, fig_name='title.pdf'):
+    modes_ind, cnt_modes = check_modes(evals, mode_energy, _e_threshold=_e_threshold)
     if cnt_modes > 0:
-        fig,ax = plt.subplots(1,cnt_modes,figsize=(20, 10))
-        fig.suptitle('Probability distribution of $E = \pm {}$ modes'.format(mode_energy),fontsize=20, fontweight='bold')
+        fig, ax = plt.subplots(1, cnt_modes, figsize=(20, 10))
+        fig.suptitle('Probability distribution of $E = \pm {}$ modes'.format(mode_energy), fontsize=40, fontweight='bold')
         for cnt in range(cnt_modes):
-            ax1 = ax[cnt]
-            ax1.plot(np.abs(evecs[:,modes_ind[cnt]])**2)
-            ax1.set_title('Edge mode {}'.format(cnt+1),fontsize=20)
-            ax1.set_xlabel('Site Number',fontsize=20)
-            ax1.set_ylabel('$|\psi|^2$',fontsize=20)
-            #ax1.text(0.43, 0.95, param_info, transform=ax1.transAxes, fontsize=16,
-        #verticalalignment=('top', bbox=dict(boxstyle="square",facecolor="white"))
-            ax1.tick_params(axis='both', which='major', labelsize=16)
-        #plt.savefig('Edge_modes_Kitaev.pdf')
+            print(cnt)
+            ax1 = ax[cnt] if cnt_modes != 1 else ax
+            density = (torch.abs(evecs[:, modes_ind[cnt]]) ** 2).cpu()
+            densityv2 = [density[2 * j] + density[2 * j + 1] for j in range(int(len(evals) / 2))]
+            ax1.plot(densityv2)
+            ax1.set_title('Edge mode {}'.format(cnt + 1))
+            ax1.set_xlabel('Site Number')
+            ax1.set_ylabel('$|\psi|^2$')
+        if save_figure:
+            plt.savefig(fig_name, bbox_inches='tight')
         plt.show()
-
+        return modes_ind
 

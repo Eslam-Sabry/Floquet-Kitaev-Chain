@@ -1,0 +1,9 @@
+axes.labelweight : normal
+axes.titleweight: normal
+figure.labelweight: normal
+figure.titleweight: normal
+font.weight: normal
+xtick.labelsize: 30.0
+ytick.labelsize: 30.0
+axes.labelsize: 30.0
+axes.titlesize: 30.0
